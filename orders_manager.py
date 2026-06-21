@@ -4,9 +4,12 @@ orders =[
     {"id": 2, "client": "ИП Аведыев С.", "price": 250_000}
 
 ]
+BACKUP_FILENAME = "orders_backup.json"
+ORDERS_FILENAME = "orders.json"
+
 # Чтение файла
 try:
-    with open("orders.json", "r", encoding="utf-8") as file:
+    with open(ORDERS_FILENAME, "r", encoding="utf-8") as file:
         orders = json.load(file)
         if isinstance(orders, list):
             pass
@@ -21,7 +24,7 @@ def get_all_orders():
 
 # Запись текущего списка
 def save_orders_to_file():
-    with open("orders.json", "w", encoding="utf-8") as file:
+    with open(ORDERS_FILENAME, "w", encoding="utf-8") as file:
         json.dump(orders, file)
 
 # Добавляет заказ
@@ -60,7 +63,7 @@ def search_orders(search_query):
 
 # Сохранение резервной копии
 def save_backup():
-    with open("orders_backup.json", "w", encoding="utf-8") as backup_file:
+    with open(BACKUP_FILENAME, "w", encoding="utf-8") as backup_file:
         json.dump(orders, backup_file)
     return True
 
@@ -68,7 +71,7 @@ def save_backup():
 def load_backup():
     global orders
     try:
-        with open("orders_backup.json", "r", encoding="utf-8") as file:
+        with open(BACKUP_FILENAME, "r", encoding="utf-8") as file:
             orders = json.load(file)
         save_orders_to_file()
         return True
