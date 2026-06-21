@@ -7,8 +7,12 @@ orders =[
 try:
     with open("orders.json", "r", encoding="utf-8") as file:
         orders = json.load(file)
+        if isinstance(orders, list):
+            pass
+        else:
+            orders = []
 except (FileNotFoundError, json.JSONDecodeError):
-    pass
+    orders = []
 
 def get_all_orders():
     return orders
