@@ -1,9 +1,11 @@
 import json
 class Order:
     def __init__(self, order_id, client_name, order_price):
+        self.__name = ""
+        self.__price = 0
         self.__id = order_id
-        self.__name = client_name
-        self.__price = order_price
+        self.name = client_name
+        self.price = order_price
     @property
     def id(self):
         return self.__id
