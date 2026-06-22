@@ -20,15 +20,18 @@ while True:
         for order in get_all_orders():
             print(f'[ID {order["id"]}] Клиент: {order["client"]} | Сумма заказа: {order["price"]} руб.')
     elif choice == "2":
-        name_client = input("Введите имя клиента: ")
-        while True:
-            try:
-                revenue_client = int(input("Введите сумму заказа: "))
-                break
-            except ValueError:
-                print("Ошибка! Нужно ввести именно цифры. Попробуйте еще раз пожалуйста.")
-        add_order(name_client, revenue_client)
-        print("Заказ успешно добавлен!")
+        if add_order():
+            name_client = input("Введите имя клиента: ")
+            while True:
+                try:
+                    revenue_client = int(input("Введите сумму заказа: "))
+                    break
+                except ValueError:
+                    print("Ошибка! Нужно ввести именно цифры. Попробуйте еще раз пожалуйста.")
+            add_order(name_client, revenue_client)
+            print("Заказ успешно добавлен!")
+        else:
+            print("Имя не может быть пустым или сумма отрицательным! Попробуйте еще раз!")
     elif choice == "3":
         print(f"Выручка состваляет {get_total_revenue()} руб.")
     elif choice == "4":
@@ -74,39 +77,59 @@ orders =[
     {"id": 2, "client": "ИП Аведыев С.", "price": 250_000}
 
 ]
-try:
-    with open("orders.json", "r", encoding="utf-8") as file:
-        orders = json.load(file)
-except (FileNotFoundError, json.JSONDecodeError):
-    pass
+BACKUP_FILENAME = "orders_backup.json"
+ORDERS_FILENAME = "orders.json"
 
+# Чтение файла
+try:
+    with open(ORDERS_FILENAME, "r", encoding="utf-8") as file:
+        orders = json.load(file)
+        if isinstance(orders, list):
+            pass
+        else:
+            orders = []
+except (FileNotFoundError, json.JSONDecodeError):
+    orders = []
+
+# Возварщает только начальный список orders
 def get_all_orders():
     return orders
 
+# Запись текущего списка
+def save_orders_to_file():
+    with open(ORDERS_FILENAME, "w", encoding="utf-8") as file:
+        json.dump(orders, file)
+
+# Добавляет заказ
 def add_order(client_name, order_price):
+    client_name = client_name.strip()
+    if len(client_name) == 0 or order_price <= 0:
+        return False
     if len(orders) == 0:
         order_id = 1
     else:
         order_id = orders[-1]['id'] + 1
     orders.append({"id": order_id, "client": client_name, "price": order_price})
-    with open("orders.json", "w", encoding="utf-8") as file:
-            json.dump(orders, file)
+    save_orders_to_file()
+    return True
 
+# Возварщает общую выручку
 def get_total_revenue():
     total = 0
     for order in orders:
         total += order["price"]
     return total
 
+# Удаляет заказ по ID
 def delete_order_by_id(order_id):
     for order in orders:
         if order["id"] == order_id:
             orders.remove(order)
-            with open("orders.json", "w", encoding="utf-8") as file:
-                json.dump(orders, file)
+            save_orders_to_file()
             return True
     return False
 
+# Поиск заказа по ID или по имени клиента
 def search_orders(search_query):
     query = search_query.lower()
     orders_list = []
@@ -115,18 +138,19 @@ def search_orders(search_query):
             orders_list.append(order)
     return orders_list
 
+# Сохранение резервной копии
 def save_backup():
-    with open("orders_backup.json", "w", encoding="utf-8") as backup_file:
+    with open(BACKUP_FILENAME, "w", encoding="utf-8") as backup_file:
         json.dump(orders, backup_file)
     return True
 
+# Загрузка резервной копии
 def load_backup():
     global orders
     try:
-        with open("orders_backup.json", "r", encoding="utf-8") as file:
+        with open(BACKUP_FILENAME, "r", encoding="utf-8") as file:
             orders = json.load(file)
-        with open("orders.json", "w", encoding="utf-8") as new_file:
-            json.dump(orders, new_file)
+        save_orders_to_file()
         return True
     except (FileNotFoundError, json.JSONDecodeError):
         return False
