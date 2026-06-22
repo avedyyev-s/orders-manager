@@ -1,47 +1,21 @@
 import json
-class Order:
-    def __init__(self, order_id, client_name, order_price):
-        self.__name = ""
-        self.__price = 0
-        self.__id = order_id
-        self.name = client_name
-        self.price = order_price
-    @property
-    def id(self):
-        return self.__id
-    @property
-    def name(self):
-        return self.__name
-    @property
-    def price(self):
-        return self.__price
-    @name.setter
-    def name(self, new_name):
-        if len(new_name.strip()) > 0:
-            self.__name = new_name
-    @price.setter
-    def price(self, new_price):
-        if new_price > 0:
-            self.__price = new_price
+from models import Order
+from repository import JSONRepository
 
 orders =[
     Order(1, "ООО 'ТТК'", 100_000),
     Order(2, "ИП Аведыев С.", 250_000)
 ]
 
-BACKUP_FILENAME = "orders_backup.json"
 ORDERS_FILENAME = "orders.json"
+BACKUP_FILENAME = "orders_backup.json"
+
+order_repo = JSONRepository(ORDERS_FILENAME)
+backup_repo = JSONRepository(BACKUP_FILENAME)
 
 # Чтение файла
-try:
-    with open(ORDERS_FILENAME, "r", encoding="utf-8") as file:
-        orders = json.load(file)
-        if isinstance(orders, list):
-            orders = [Order(item["id"], item["client"], item["price"]) for item in orders]
-        else:
-            orders = []
-except (FileNotFoundError, json.JSONDecodeError):
-    orders = []
+orders = order_repo.load_orders()
+
 
 # Возварщает только начальный список orders
 def get_all_orders():
@@ -49,9 +23,7 @@ def get_all_orders():
 
 # Запись текущего списка
 def save_orders_to_file():
-    raw_orders = [{"id": order.id, "client": order.name, "price": order.price} for order in orders]
-    with open(ORDERS_FILENAME, "w", encoding="utf-8") as file:
-        json.dump(raw_orders, file)
+    order_repo.save_orders(orders)
 
 # Добавляет заказ
 def add_order(client_name, order_price):
@@ -93,18 +65,14 @@ def search_orders(search_query):
 
 # Сохранение резервной копии
 def save_backup():
-    with open(BACKUP_FILENAME, "w", encoding="utf-8") as backup_file:
-        raw_orders = [{"id": order.id, "client": order.name, "price": order.price} for order in orders]
-        json.dump(raw_orders, backup_file)
+    backup_repo.save_orders(orders)
     return True
 
 # Загрузка резервной копии
 def load_backup():
     global orders
     try:
-        with open(BACKUP_FILENAME, "r", encoding="utf-8") as file:
-            orders = json.load(file)
-            orders = [Order(item["id"], item["client"], item["price"]) for item in orders]
+        orders = backup_repo.load_orders()
         save_orders_to_file()
         return True
     except (FileNotFoundError, json.JSONDecodeError):
