@@ -15,7 +15,7 @@ while True:
     choice = input("Выберите пункт: ")
     if choice == "1":
         for order in get_all_orders():
-            print(f'[ID {order["id"]}] Клиент: {order["client"]} | Сумма заказа: {order["price"]} руб.')
+            print(f"[ID {order.id} Клиент: {order.name} | Сумма заказа: {order.price} руб.]")
     elif choice == "2":
         name_client = input("Введите имя клиента: ")
         while True:
@@ -48,7 +48,7 @@ while True:
             print("Ничего не найдено")
         else:
             for result in result_search:
-                print(f"ID: {result['id']} | Клиент: {result['client']} | Сумма заказа: {result['price']} руб.")
+                print(f"ID: {result.id} | Клиент: {result.name} | Сумма заказа: {result.price} руб.")
     elif choice == "6":
         if save_backup():
             print("Резервная копия успешно создана в файле orders_backup.json!")

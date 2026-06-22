@@ -41,8 +41,8 @@ def add_order(client_name, order_price):
     if len(orders) == 0:
         order_id = 1
     else:
-        order_id = orders[-1]['id'] + 1
-    orders.append({"id": order_id, "client": client_name, "price": order_price})
+        order_id = orders[-1].id + 1
+    orders.append(Order(order_id, client_name, order_price))
     save_orders_to_file()
     return True
 
@@ -74,7 +74,8 @@ def search_orders(search_query):
 # Сохранение резервной копии
 def save_backup():
     with open(BACKUP_FILENAME, "w", encoding="utf-8") as backup_file:
-        json.dump(orders, backup_file)
+        raw_orders = [{"id": order.id, "client": order.name, "price": order.price} for order in orders]
+        json.dump(raw_orders, backup_file)
     return True
 
 # Загрузка резервной копии
