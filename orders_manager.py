@@ -1,9 +1,27 @@
 import json
 class Order:
     def __init__(self, order_id, client_name, order_price):
-        self.id = order_id
-        self.name = client_name
-        self.price = order_price
+        self.__id = order_id
+        self.__name = client_name
+        self.__price = order_price
+    @property
+    def id(self):
+        return self.__id
+    @property
+    def name(self):
+        return self.__name
+    @property
+    def price(self):
+        return self.__price
+    @name.setter
+    def name(self, new_name):
+        if len(new_name.strip()) > 0:
+            self.__name = new_name
+    @price.setter
+    def price(self, new_price):
+        if new_price > 0:
+            self.__price = new_price
+
 orders =[
     Order(1, "ООО 'ТТК'", 100_000),
     Order(2, "ИП Аведыев С.", 250_000)
