@@ -1,9 +1,14 @@
 import json
+class Order:
+    def __init__(self, order_id, client_name, order_price):
+        self.id = order_id
+        self.name = client_name
+        self.price = order_price
 orders =[
-    {"id": 1, "client": "ООО 'ТТК'", "price": 100_000},
-    {"id": 2, "client": "ИП Аведыев С.", "price": 250_000}
-
+    Order(1, "ООО 'ТТК'", 100_000),
+    Order(2, "ИП Аведыев С.", 250_000)
 ]
+
 BACKUP_FILENAME = "orders_backup.json"
 ORDERS_FILENAME = "orders.json"
 
@@ -12,7 +17,7 @@ try:
     with open(ORDERS_FILENAME, "r", encoding="utf-8") as file:
         orders = json.load(file)
         if isinstance(orders, list):
-            pass
+            orders = [Order(item["id"], item["client"], item["price"]) for item in orders]
         else:
             orders = []
 except (FileNotFoundError, json.JSONDecodeError):
@@ -24,8 +29,9 @@ def get_all_orders():
 
 # Запись текущего списка
 def save_orders_to_file():
+    raw_orders = [{"id": order.id, "client": order.name, "price": order.price} for order in orders]
     with open(ORDERS_FILENAME, "w", encoding="utf-8") as file:
-        json.dump(orders, file)
+        json.dump(raw_orders, file)
 
 # Добавляет заказ
 def add_order(client_name, order_price):
@@ -44,13 +50,13 @@ def add_order(client_name, order_price):
 def get_total_revenue():
     total = 0
     for order in orders:
-        total += order["price"]
+        total += order.price
     return total
 
 # Удаляет заказ по ID
 def delete_order_by_id(order_id):
     for order in orders:
-        if order["id"] == order_id:
+        if order.id == order_id:
             orders.remove(order)
             save_orders_to_file()
             return True
@@ -61,7 +67,7 @@ def search_orders(search_query):
     query = search_query.lower()
     orders_list = []
     for order in orders:
-        if query == str(order["id"]) or query in order["client"].lower():
+        if query == str(order.id) or query in order.name.lower():
             orders_list.append(order)
     return orders_list
 
@@ -77,6 +83,7 @@ def load_backup():
     try:
         with open(BACKUP_FILENAME, "r", encoding="utf-8") as file:
             orders = json.load(file)
+            orders = [Order(item["id"], item["client"], item["price"]) for item in orders]
         save_orders_to_file()
         return True
     except (FileNotFoundError, json.JSONDecodeError):

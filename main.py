@@ -17,15 +17,14 @@ while True:
         for order in get_all_orders():
             print(f'[ID {order["id"]}] Клиент: {order["client"]} | Сумма заказа: {order["price"]} руб.')
     elif choice == "2":
-        if add_order():
-            name_client = input("Введите имя клиента: ")
-            while True:
-                try:
-                    revenue_client = int(input("Введите сумму заказа: "))
-                    break
-                except ValueError:
-                    print("Ошибка! Нужно ввести именно цифры. Попробуйте еще раз пожалуйста.")
-            add_order(name_client, revenue_client)
+        name_client = input("Введите имя клиента: ")
+        while True:
+            try:
+                revenue_client = int(input("Введите сумму заказа: "))
+                break
+            except ValueError:
+                print("Ошибка! Нужно ввести именно цифры. Попробуйте еще раз пожалуйста.")
+        if add_order(name_client, revenue_client):
             print("Заказ успешно добавлен!")
         else:
             print("Имя не может быть пустым или сумма отрицательным! Попробуйте еще раз!")
