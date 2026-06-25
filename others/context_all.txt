@@ -112,10 +112,8 @@ order_repo = JSONRepository(ORDERS_FILENAME)
 backup_repo = JSONRepository(BACKUP_FILENAME)
 
 # Чтение файла
-try:
-    orders = order_repo.load_orders()
-except (FileNotFoundError, json.JSONDecodeError):
-    orders = []
+orders = order_repo.load_orders()
+
 
 # Возварщает только начальный список orders
 def get_all_orders():
@@ -123,7 +121,7 @@ def get_all_orders():
 
 # Запись текущего списка
 def save_orders_to_file():
-    order_repo.load_orders(orders)
+    order_repo.save_orders(orders)
 
 # Добавляет заказ
 def add_order(client_name, order_price):
@@ -201,3 +199,20 @@ class JSONRepository:
                     return [Order(item["id"], item["client"], item["price"]) for item in data]
         except(FileNotFoundError, json.JSONDecodeError):
             return []
+
+======= ФАЙЛ: test_db.py =======
+import psycopg2
+
+try:
+    # Пытаемся подключиться к нашей базе в Docker
+    connection = psycopg2.connect(
+        host="localhost",
+        port="5432",
+        user="postgres",
+        password="mysecretpassword",
+        database="taxi_db"
+    )
+    print("Ура! Связь с PostgreSQL успешно установлена!")
+    connection.close()
+except Exception as e:
+    print(f"Ошибка подключения: {e}")
