@@ -27,7 +27,17 @@ class PostgreSQLRepository:
         self.__db_config = db_config
 
     def save_orders(self, orders):
-        pass
+        try:
+            db_connection = psycopg2.connect(**self.__db_config) #Тут мы устанавливаем мост
+            cursor = db_connection.cursor() #Тут получается курсор
+            query = "INSERT INTO orders (client_name, price) VALUES (%s, %s)" #Запрос бд
+            for order in orders:
+                cursor.execute(query, (order.name, order.price))
+            db_connection.commit()
+            cursor.close()
+            db_connection.close()
+        except(psycopg2.OperationalError, Exception):
+            print("Ошибка!")
 
     def load_orders(self):
         try:
