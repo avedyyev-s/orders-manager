@@ -21,6 +21,13 @@ class JSONRepository:
         except(FileNotFoundError, json.JSONDecodeError):
             return []
 
+DB_CONFIG = {
+    "dbname": "taxi_db",
+    "user": "postgres",
+    "password": "mysecretpassword",
+    "host": "localhost",
+    "port": "5432"
+}
 
 class PostgreSQLRepository:
     def __init__(self, db_config):

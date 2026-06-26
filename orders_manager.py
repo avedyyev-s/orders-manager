@@ -1,16 +1,16 @@
 import json
 from models import Order
 from repository import JSONRepository
+from repository import PostgreSQLRepository, DB_CONFIG
 
 orders =[
     Order(1, "ООО 'ТТК'", 100_000),
     Order(2, "ИП Аведыев С.", 250_000)
 ]
 
-ORDERS_FILENAME = "orders.json"
 BACKUP_FILENAME = "orders_backup.json"
 
-order_repo = JSONRepository(ORDERS_FILENAME)
+order_repo = PostgreSQLRepository(DB_CONFIG)
 backup_repo = JSONRepository(BACKUP_FILENAME)
 
 # Чтение файла
