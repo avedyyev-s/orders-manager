@@ -31,6 +31,8 @@ class PostgreSQLRepository:
             db_connection = psycopg2.connect(**self.__db_config) #Тут мы устанавливаем мост
             cursor = db_connection.cursor() #Тут получается курсор
             query = "INSERT INTO orders (client_name, price) VALUES (%s, %s)" #Запрос бд
+            delete_table = "TRUNCATE TABLE orders"
+            cursor.execute(delete_table)
             for order in orders:
                 cursor.execute(query, (order.name, order.price))
             db_connection.commit()
