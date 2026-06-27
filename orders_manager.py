@@ -45,11 +45,11 @@ def get_total_revenue():
 
 # Удаляет заказ по ID
 def delete_order_by_id(order_id):
-    for order in orders:
-        if order.id == order_id:
-            orders.remove(order)
-            save_orders_to_file()
-            return True
+    global orders
+    if order_id in [order.id for order in orders]:
+        order_repo.delete_order(order_id)
+        orders = order_repo.load_orders()
+        return True
     return False
 
 # Поиск заказа по ID или по имени клиента

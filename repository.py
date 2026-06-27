@@ -37,11 +37,11 @@ class PostgreSQLRepository:
         try:
             db_connection = psycopg2.connect(**self.__db_config) #Тут мы устанавливаем мост
             cursor = db_connection.cursor() #Тут получается курсор
-            query = "INSERT INTO orders (client_name, price) VALUES (%s, %s)" #Запрос бд
+            query_db = "INSERT INTO orders (client_name, price) VALUES (%s, %s)" #Запрос бд
             delete_table = "TRUNCATE TABLE orders"
             cursor.execute(delete_table)
             for order in orders:
-                cursor.execute(query, (order.name, order.price))
+                cursor.execute(query_db, (order.name, order.price))
             db_connection.commit()
             cursor.close()
             db_connection.close()
@@ -60,3 +60,12 @@ class PostgreSQLRepository:
         except(psycopg2.OperationalError, Exception):
             print("Ошибка при работе с базой данных!")
             return []
+    
+    def delete_order(self, order_id):
+        db_connection = psycopg2.connect(**self.__db_config) #Установка моста
+        cursor = db_connection.cursor() #Установка курсора
+        query_db = "DELETE FROM orders WHERE id = %s" #Запрос БД, пока не знаю ни каких запросов сам, как мог
+        cursor.execute(query_db, (order_id,))
+        db_connection.commit()
+        cursor.close()
+        db_connection.close()
