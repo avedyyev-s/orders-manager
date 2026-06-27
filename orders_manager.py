@@ -27,15 +27,13 @@ def save_orders_to_file():
 
 # Добавляет заказ
 def add_order(client_name, order_price):
+    global orders
     client_name = client_name.strip()
     if len(client_name) == 0 or order_price <= 0:
         return False
-    if len(orders) == 0:
-        order_id = 1
-    else:
-        order_id = orders[-1].id + 1
-    orders.append(Order(order_id, client_name, order_price))
+    orders.append(Order(0, client_name, order_price))
     save_orders_to_file()
+    orders = order_repo.load_orders()
     return True
 
 # Возварщает общую выручку
