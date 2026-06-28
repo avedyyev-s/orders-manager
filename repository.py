@@ -1,6 +1,10 @@
+import os
 import json
 import psycopg2
 from models import Order
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class JSONRepository:
     
@@ -22,11 +26,11 @@ class JSONRepository:
             return []
 
 DB_CONFIG = {
-    "dbname": "taxi_db",
-    "user": "postgres",
-    "password": "mysecretpassword",
-    "host": "localhost",
-    "port": "5432"
+    "dbname": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT")
 }
 
 class PostgreSQLRepository:
