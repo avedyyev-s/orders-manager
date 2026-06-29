@@ -69,6 +69,30 @@ while True:
         print("Неверный пункт меню! Попробуйте снова.")
 
 
+======= ФАЙЛ: bot.py =======
+import os
+from dotenv import load_dotenv
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
+import asyncio
+
+load_dotenv()
+
+BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
+
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+@dp.message(Command("start"))
+async def start_handler(message: types.Message):
+    await message.answer("Welcome to Taxi Orders Manager!")
+
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
 ======= ФАЙЛ: models.py =======
 class Order:
     def __init__(self, order_id, client_name, order_price):
@@ -99,16 +123,16 @@ class Order:
 import json
 from models import Order
 from repository import JSONRepository
+from repository import PostgreSQLRepository, DB_CONFIG
 
 orders =[
     Order(1, "ООО 'ТТК'", 100_000),
     Order(2, "ИП Аведыев С.", 250_000)
 ]
 
-ORDERS_FILENAME = "orders.json"
 BACKUP_FILENAME = "orders_backup.json"
 
-order_repo = JSONRepository(ORDERS_FILENAME)
+order_repo = PostgreSQLRepository(DB_CONFIG)
 backup_repo = JSONRepository(BACKUP_FILENAME)
 
 # Чтение файла
@@ -125,15 +149,13 @@ def save_orders_to_file():
 
 # Добавляет заказ
 def add_order(client_name, order_price):
+    global orders
     client_name = client_name.strip()
     if len(client_name) == 0 or order_price <= 0:
         return False
-    if len(orders) == 0:
-        order_id = 1
-    else:
-        order_id = orders[-1].id + 1
-    orders.append(Order(order_id, client_name, order_price))
+    orders.append(Order(0, client_name, order_price))
     save_orders_to_file()
+    orders = order_repo.load_orders()
     return True
 
 # Возварщает общую выручку
@@ -145,11 +167,11 @@ def get_total_revenue():
 
 # Удаляет заказ по ID
 def delete_order_by_id(order_id):
-    for order in orders:
-        if order.id == order_id:
-            orders.remove(order)
-            save_orders_to_file()
-            return True
+    global orders
+    if order_id in [order.id for order in orders]:
+        order_repo.delete_order(order_id)
+        orders = order_repo.load_orders()
+        return True
     return False
 
 # Поиск заказа по ID или по имени клиента
@@ -178,8 +200,13 @@ def load_backup():
 
 
 ======= ФАЙЛ: repository.py =======
+import os
 import json
+import psycopg2
 from models import Order
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class JSONRepository:
     
@@ -200,19 +227,51 @@ class JSONRepository:
         except(FileNotFoundError, json.JSONDecodeError):
             return []
 
-======= ФАЙЛ: test_db.py =======
-import psycopg2
+DB_CONFIG = {
+    "dbname": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT")
+}
 
-try:
-    # Пытаемся подключиться к нашей базе в Docker
-    connection = psycopg2.connect(
-        host="localhost",
-        port="5432",
-        user="postgres",
-        password="mysecretpassword",
-        database="taxi_db"
-    )
-    print("Ура! Связь с PostgreSQL успешно установлена!")
-    connection.close()
-except Exception as e:
-    print(f"Ошибка подключения: {e}")
+class PostgreSQLRepository:
+    def __init__(self, db_config):
+        self.__db_config = db_config
+
+    def save_orders(self, orders):
+        try:
+            db_connection = psycopg2.connect(**self.__db_config) #Тут мы устанавливаем мост
+            cursor = db_connection.cursor() #Тут получается курсор
+            query_db = "INSERT INTO orders (client_name, price) VALUES (%s, %s)" #Запрос бд
+            delete_table = "TRUNCATE TABLE orders"
+            cursor.execute(delete_table)
+            for order in orders:
+                cursor.execute(query_db, (order.name, order.price))
+            db_connection.commit()
+            cursor.close()
+            db_connection.close()
+        except(psycopg2.OperationalError, Exception):
+            print("Ошибка!")
+
+    def load_orders(self):
+        try:
+            db_connection = psycopg2.connect(**self.__db_config)
+            cursor = db_connection.cursor()
+            cursor.execute("SELECT * FROM orders")
+            rows = cursor.fetchall()
+            cursor.close()
+            db_connection.close()
+            return [Order(row[0], row[1], row[2]) for row in rows]
+        except(psycopg2.OperationalError, Exception):
+            print("Ошибка при работе с базой данных!")
+            return []
+    
+    def delete_order(self, order_id):
+        db_connection = psycopg2.connect(**self.__db_config) #Установка моста
+        cursor = db_connection.cursor() #Установка курсора
+        query_db = "DELETE FROM orders WHERE id = %s" #Запрос БД, пока не знаю ни каких запросов сам, как мог
+        cursor.execute(query_db, (order_id,))
+        db_connection.commit()
+        cursor.close()
+        db_connection.close()

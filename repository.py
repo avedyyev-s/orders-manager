@@ -42,8 +42,8 @@ class PostgreSQLRepository:
             db_connection = psycopg2.connect(**self.__db_config) #Тут мы устанавливаем мост
             cursor = db_connection.cursor() #Тут получается курсор
             query_db = "INSERT INTO orders (client_name, price) VALUES (%s, %s)" #Запрос бд
-            delete_table = "TRUNCATE TABLE orders"
-            cursor.execute(delete_table)
+            # delete_table = "TRUNCATE TABLE orders"
+            # cursor.execute(delete_table)
             for order in orders:
                 cursor.execute(query_db, (order.name, order.price))
             db_connection.commit()
@@ -70,6 +70,15 @@ class PostgreSQLRepository:
         cursor = db_connection.cursor() #Установка курсора
         query_db = "DELETE FROM orders WHERE id = %s" #Запрос БД, пока не знаю ни каких запросов сам, как мог
         cursor.execute(query_db, (order_id,))
+        db_connection.commit()
+        cursor.close()
+        db_connection.close()
+     
+    def add_order(self, order):
+        db_connection = psycopg2.connect(**self.__db_config)
+        cursor = db_connection.cursor()
+        quary = "INSERT INTO orders (client_name, price) VALUES (%s, %s)"
+        cursor.execute(quary, (order.name, order.price))
         db_connection.commit()
         cursor.close()
         db_connection.close()

@@ -31,8 +31,9 @@ def add_order(client_name, order_price):
     client_name = client_name.strip()
     if len(client_name) == 0 or order_price <= 0:
         return False
-    orders.append(Order(0, client_name, order_price))
-    save_orders_to_file()
+    new_order = Order(0, client_name, order_price)
+    orders.append(new_order)
+    order_repo.add_order(new_order)
     orders = order_repo.load_orders()
     return True
 
