@@ -72,9 +72,23 @@ while True:
 ======= ФАЙЛ: bot.py =======
 import os
 from dotenv import load_dotenv
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.context import FSMContext
 import asyncio
+from orders_manager import get_total_revenue, get_all_orders, add_order, delete_order_by_id
+main_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Все заказы")],
+        [KeyboardButton(text="Добавить заказ")],
+        [KeyboardButton(text="Показать Выручку")],
+        [KeyboardButton(text="Удалить Заказ")]
+        
+    ],
+    resize_keyboard=True
+)
 
 load_dotenv()
 
@@ -83,9 +97,61 @@ BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
+class OrderForm(StatesGroup):
+    waiting_for_name = State()
+    waiting_for_price = State()
+    waiting_for_id = State()
+
 @dp.message(Command("start"))
 async def start_handler(message: types.Message):
-    await message.answer("Welcome to Taxi Orders Manager!")
+    await message.answer("start", reply_markup=main_keyboard)
+
+@dp.message(F.text == "Все заказы")
+async def order_handler(message: types.Message):
+    for order in get_all_orders():
+        await message.answer(f"ID {order.id} | Клиент: {order.name} | Сумма заказа: {order.price} руб.")
+
+@dp.message(F.text == "Показать Выручку")
+async def revenue_handler(message: types.Message):
+    await message.answer(f"Выручка составляет {str(get_total_revenue())} руб.")
+
+@dp.message(F.text == "Добавить заказ")
+async def process_start(message: types.Message, state: FSMContext):
+    await state.set_state(OrderForm.waiting_for_name)
+    await message.answer("Введите имя:")
+
+@dp.message(OrderForm.waiting_for_name)
+async def process_name(message: types.Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    await state.set_state(OrderForm.waiting_for_price)
+    await message.answer("Введите сумму:")
+
+@dp.message(OrderForm.waiting_for_price)
+async def process_price(message: types.Message, state: FSMContext):
+    user_data = await state.get_data()
+    name = user_data.get("name")
+    try:
+        price = int(message.text)
+    except(ValueError):
+        await message.answer("Введите число!")
+        return
+    add_order(name, price)
+    await state.clear()
+    await message.answer("Заказ успешно добавлен!", reply_markup=main_keyboard)
+
+@dp.message(F.text == "Удалить заказ")
+async def process_delete_start(message: types.Message, state: FSMContext):
+    await state.set_state(OrderForm.waiting_for_id)
+    await message.answer("Введите ID удаляемого заказа:")
+
+@dp.message(OrderForm.waiting_for_id)
+async def process_delete(message: types.Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    user_data = await state.get_data()
+    order_id = user_data.get("id")
+    delete_order_by_id(order_id)
+    await state.clear()
+    await message.answer("Заказ успешно удален!", reply_markup=main_keyboard)
 
 async def main():
     await dp.start_polling(bot)
@@ -153,8 +219,9 @@ def add_order(client_name, order_price):
     client_name = client_name.strip()
     if len(client_name) == 0 or order_price <= 0:
         return False
-    orders.append(Order(0, client_name, order_price))
-    save_orders_to_file()
+    new_order = Order(0, client_name, order_price)
+    orders.append(new_order)
+    order_repo.add_order(new_order)
     orders = order_repo.load_orders()
     return True
 
@@ -244,8 +311,8 @@ class PostgreSQLRepository:
             db_connection = psycopg2.connect(**self.__db_config) #Тут мы устанавливаем мост
             cursor = db_connection.cursor() #Тут получается курсор
             query_db = "INSERT INTO orders (client_name, price) VALUES (%s, %s)" #Запрос бд
-            delete_table = "TRUNCATE TABLE orders"
-            cursor.execute(delete_table)
+            # delete_table = "TRUNCATE TABLE orders"
+            # cursor.execute(delete_table)
             for order in orders:
                 cursor.execute(query_db, (order.name, order.price))
             db_connection.commit()
@@ -272,6 +339,15 @@ class PostgreSQLRepository:
         cursor = db_connection.cursor() #Установка курсора
         query_db = "DELETE FROM orders WHERE id = %s" #Запрос БД, пока не знаю ни каких запросов сам, как мог
         cursor.execute(query_db, (order_id,))
+        db_connection.commit()
+        cursor.close()
+        db_connection.close()
+     
+    def add_order(self, order):
+        db_connection = psycopg2.connect(**self.__db_config)
+        cursor = db_connection.cursor()
+        quary = "INSERT INTO orders (client_name, price) VALUES (%s, %s)"
+        cursor.execute(quary, (order.name, order.price))
         db_connection.commit()
         cursor.close()
         db_connection.close()
