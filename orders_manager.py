@@ -32,9 +32,9 @@ def add_order(client_name, order_price):
     if len(client_name) == 0 or order_price <= 0:
         return False
     new_order = Order(0, client_name, order_price)
-    orders.append(new_order)
-    order_repo.add_order(new_order)
-    orders = order_repo.load_orders()
+    real_id = order_repo.add_order(new_order)
+    final_order = Order(real_id, client_name, order_price)
+    orders.append(final_order)
     return True
 
 # Возварщает общую выручку
@@ -47,10 +47,11 @@ def get_total_revenue():
 # Удаляет заказ по ID
 def delete_order_by_id(order_id):
     global orders
-    if order_id in [order.id for order in orders]:
-        order_repo.delete_order(order_id)
-        orders = order_repo.load_orders()
-        return True
+    for order in orders:
+        if order.id == order_id:
+            order_repo.delete_order(order_id)
+            orders.remove(order)
+            return True
     return False
 
 # Поиск заказа по ID или по имени клиента

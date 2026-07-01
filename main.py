@@ -1,33 +1,33 @@
-from orders_manager import get_all_orders, add_order, get_total_revenue, delete_order_by_id, search_orders, save_backup, load_backup
+from orders_manager import get_all_orders, add_order, get_total_revenue, delete_order_by_id, search_orders, save_backup, load_backup #Тут мы импортируем функции из бизнес логики который мы вынесли в отдельный файл orders_manager.py
 
-title_menu = "---Меню---"
-show_all_orders = "1. Показать все заказы"
-add_new_order = "2. Добавить новый заказ"
-show_total_revenue = "3. Показать общую выручку"
-delete_order = "4. Удалить заказ по ID"
-find_order = "5. Поиск заказа"
-create_backup = "6. Создать резервную копию базы"
-restore_backup = "7. Восстановить базу из резервной копии"
-exit_in_program = "8. Выйти из программы"
+title_menu = "---Меню---" #Создаем переменную и сохраняем в неё строку с текстом пункта меню
+show_all_orders = "1. Показать все заказы" #Создаем переменную и сохраняем в неё строку с текстом пункта меню
+add_new_order = "2. Добавить новый заказ" #Создаем переменную и сохраняем в неё строку с текстом пункта меню
+show_total_revenue = "3. Показать общую выручку" #Создаем переменную и сохраняем в неё строку с текстом пункта меню
+delete_order = "4. Удалить заказ по ID" #Создаем переменную и сохраняем в неё строку с текстом пункта меню
+find_order = "5. Поиск заказа" #Создаем переменную и сохраняем в неё строку с текстом пункта меню
+create_backup = "6. Создать резервную копию базы" #Создаем переменную и сохраняем в неё строку с текстом пункта меню
+restore_backup = "7. Восстановить базу из резервной копии" #Создаем переменную и сохраняем в неё строку с текстом пункта меню
+exit_in_program = "8. Выйти из программы" #Создаем переменную и сохраняем в неё строку с текстом пункта меню
 
-while True:
-    print(title_menu, show_all_orders, add_new_order, show_total_revenue, delete_order, find_order, create_backup, restore_backup, exit_in_program, sep='\n')
-    choice = input("Выберите пункт: ")
-    if choice == "1":
-        for order in get_all_orders():
-            print(f"[ID {order.id} Клиент: {order.name} | Сумма заказа: {order.price} руб.]")
-    elif choice == "2":
-        name_client = input("Введите имя клиента: ")
-        while True:
-            try:
-                revenue_client = int(input("Введите сумму заказа: "))
-                break
-            except ValueError:
-                print("Ошибка! Нужно ввести именно цифры. Попробуйте еще раз пожалуйста.")
-        if add_order(name_client, revenue_client):
-            print("Заказ успешно добавлен!")
-        else:
-            print("Имя не может быть пустым или сумма отрицательным! Попробуйте еще раз!")
+while True: #Запускаем бесконечный цикл. Прокручиваем меню для выбора пока пользователь не вышел принудительно.
+    print(title_menu, show_all_orders, add_new_order, show_total_revenue, delete_order, find_order, create_backup, restore_backup, exit_in_program, sep='\n') #Принтуем для пользователья меню которые на верху уже создали и каждую переменную на новой строке
+    choice = input("Выберите пункт: ") #Созадем переменную и справшиваем пользователя что он хочет
+    if choice == "1": #Если он нажмет 1
+        for order in get_all_orders(): #Запусаем цикл и перебираем orders, вызываем фукцию get_all_orders, что и есть orders.
+            print(f"[ID {order.id} Клиент: {order.name} | Сумма заказа: {order.price} руб.]") #Через f строку мы выводим каждый заказ пользователю.
+    elif choice == "2": #Если нажимает 2
+        name_client = input("Введите имя клиента: ") #Просим ввести имя заказчика
+        while True: #Запускаем бесконечный цикл
+            try: #Говорим Пайтону братан:
+                revenue_client = int(input("Введите сумму заказа: ")) #Попытайся брать у пользователя тип данных число.
+                break #Если получился брать число говорим братан все супер. Спасибо.
+            except ValueError: #А если ти данных не тот
+                print("Ошибка! Нужно ввести именно цифры. Попробуйте еще раз пожалуйста.") #Говори дебил сумма заказа пишется цифрами и мы говорим Пайтон братан спроси еще раз ради Бога.
+        if add_order(name_client, revenue_client): #После того получили все что мы хотели, полученные данные передаем функцию add_order(), и если функция не возражает
+            print("Заказ успешно добавлен!") #Пишем ебать ты гений)
+        else: #А если фунция капризначает
+            print("Имя не может быть пустым или сумма отрицательным! Попробуйте еще раз!") #Говорим тугодум думай головой а нижней головой)
     elif choice == "3":
         print(f"Выручка состваляет {get_total_revenue()} руб.")
     elif choice == "4":
